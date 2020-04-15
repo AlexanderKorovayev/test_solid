@@ -6,17 +6,24 @@ __author__ = 'Korovaev A.V.'
 
 import psycopg2
 from psycopg2.extras import DictCursor
-from interfaces.i_db_worker import IDBWorker
 
 
-class PGWorker(IDBWorker):
+class PGWorker:
 
-    def __init__(self, db_name, login, password, host='localhost', port='5432'):
-        self.db_name = db_name
-        self.login = login
-        self.password = password
-        self.host = host
-        self.port = port
+    def __new__(cls, db_name=None, login=None, password=None, host='localhost', port='5432'):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(PGWorker, cls).__new__(cls)
+        if not hasattr(cls, 'db_name'):
+            cls.db_name = db_name
+        if not hasattr(cls, 'login'):
+            cls.login = login
+        if not hasattr(cls, 'password'):
+            cls.password = password
+        if not hasattr(cls, 'host'):
+            cls.host = host
+        if not hasattr(cls, 'port'):
+            cls.port = port
+        return cls.instance
     
     def get_user_by_id(self, user_id):
         """
@@ -70,13 +77,7 @@ class PGWorker(IDBWorker):
             with conn.cursor(cursor_factory=DictCursor) as cur:
                 cur.execute('INSERT INTO user_info VALUES(%s, %s, %s, %s, %s)',
                             (user_data.get('user_id'),
-                             user_data.get('first_name'),
-                             user_data.get('last_name'),
-                             user_data.get('country'),
-                             user_data.get('phone')))
-
-
-
-
-
-
+                             user_data.get('name'),
+                             user_data.get('surname'),
+                             user_data.get('countries'),
+                             user_data.get('phone_number')))

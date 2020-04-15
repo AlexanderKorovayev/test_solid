@@ -8,39 +8,77 @@ from implementation.transport import UserTransport
 from implementation.pg_user_worker import PGUserWorker
 from implementation.vk_user_worker import VKUserWorker
 
+# в этом модуле мы уже делаем проверки на корректность данных и прочее а так же предаставляем бизнес логику
+# дальше модуль маин уже использует то что нужно конкретным задачам того кто хочет использвать наш апи
 
-def get_user_by_id(user_id):
+
+def get_user_by_id_db(user_id):
     """
-    функция получения данных пользователя
+    функция получения данных пользователя из базы данных
     :param user_id: id пользователя данные о котором необходимо получить
     """
+    
+    # результат по умолчанию
+    result = {'user_id': None, 'name': None, 'surname': None, 'countries': None, 'phone_number': None}
 
-    pg_user_worker = PGUserWorker(db_name='test_solid', login='postgres', password='postgres')
+    # создаём синглтон для работы с базами данных
+    pg_worker = PGWorker(db_name='test_solid', login='postgres', password='postgres')
+
+    # пробуем получить данные из базы
+    pg_user_worker = PGUserWorker()
     user_transport = UserTransport(pg_user_worker)
     # если данные о пользователе уже есть в базе данных то получим их
     user_data = user_transport.get_user_by_id(user_id)
-    print('from bd ' + str(user_data))
+    
     if user_data:
         # проверяем корректность данных и возвращаем
-        return user_data
+        result = user_data
+        return result
     else:
-        # получаем данные для подключения к вк
-        # сделать работу с базами синглтоном
-        pg_worker = PGWorker(db_name='test_solid', login='postgres', password='postgres')
-        connection_data = pg_worker.get_vk_connect_data('7396173')
-        # проверяем корректность данных и если всё норм то получаем данные из вк
-        token = connection_data.get('access_token')
-        api_version = connection_data.get('v')
-        vk_user_worker = VKUserWorker(token, api_version)
-        user_transport = UserTransport(vk_user_worker)
-        user_data = user_transport.get_user_by_id(user_id)
+        return result
+
+
+def get_user_by_id_vk(user_id):
+    """
+    функция получения данных пользователя из червиса вк
+    :param user_id: id пользователя данные о котором необходимо получить
+    """
+
+    # результат по умолчанию
+    result = {'user_id': None, 'name': None, 'surname': None, 'countries': None, 'phone_number': None}
+
+    # создаём синглтон для работы с базами данных
+    pg_worker = PGWorker(db_name='test_solid', login='postgres', password='postgres')
+
+    # получаем данные для подключения к вк
+    connection_data = pg_worker.get_vk_connect_data('7396173')
+    # проверяем корректность данных
+    token = connection_data.get('access_token')
+    api_version = connection_data.get('v')
+    # если всё норм то получаем данные из вк
+    vk_user_worker = VKUserWorker(token, api_version)
+    user_transport = UserTransport(vk_user_worker)
+    user_data = user_transport.get_user_by_id(user_id)
+    if user_data:
         # формируем нужный формат
-        res = {k: v.get('title') if k=='country' else v for k, v in user_data.items() if k in
-               ('first_name', 'last_name', 'phone', 'country')}
-        res['user_id'] = user_id
-        print('from vk ' + str(res))
-        # пишем в базу
-        pg_worker.save_user_data(res)
-        return res
-        # в этом модуле мы уже делаем проверки на корректность данных и прочее а так же предаставляем бизнес логику
-        # дальше модуль маин уже использует то что нужно конкретным задачам того кто хочет использвать наш апи
+        vk_result = {k: v.get('title') if k=='country' else v for k, v in user_data.items() if k in
+                     ('first_name', 'last_name', 'phone', 'country')}
+        result['user_id'] = user_id
+        result['name'] = vk_result.get('first_name')
+        result['surname'] = vk_result.get('last_name')
+        result['countries'] = vk_result.get('country')
+        result['phone_number'] = vk_result.get('phone')
+        return result
+    else:
+        return result
+
+
+def save_user_data_pg(user_data):
+    """
+    функция сохранения данных в базу постгреса
+    :param user_data: данные, которые необходимо сохранить
+    """
+    # проверяем что данные для записи корректны
+    # создаём синглтон для работы с базами данных
+    pg_worker = PGWorker(db_name='test_solid', login='postgres', password='postgres')
+    pg_worker.save_user_data(user_data)
