@@ -8,9 +8,6 @@ from implementation.transport import UserTransport
 from implementation.pg_user_worker import PGUserWorker
 from implementation.vk_user_worker import VKUserWorker
 
-# в этом модуле мы уже делаем проверки на корректность данных и прочее а так же предаставляем бизнес логику
-# дальше модуль маин уже использует то что нужно конкретным задачам того кто хочет использвать наш апи
-
 
 def get_user_by_id_db(user_id):
     """
@@ -51,7 +48,7 @@ def get_user_by_id_vk(user_id):
     pg_worker = PGWorker(db_name='test_solid', login='postgres', password='postgres')
 
     # получаем данные для подключения к вк
-    connection_data = pg_worker.get_vk_connect_data('7396173')
+    connection_data = pg_worker.get_vk_connect_data(str(user_id))
     # проверяем корректность данных
     token = connection_data.get('access_token')
     api_version = connection_data.get('v')

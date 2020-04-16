@@ -21,4 +21,5 @@ def get_user_by_id(user_id):
         api.save_user_data_pg(user_data)
         return user_data
 
-get_user_by_id(5)
+
+get_user_by_id(7396173)
