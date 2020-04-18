@@ -8,8 +8,9 @@ __author__ = 'Korovaev A.V.'
 
 class IUserWorker:
 
-    def get_user_data_by_id(self):
+    def get_user_by_id(self, user_id):
         """
         получить данные пользователя
+        :param user_id: id пользователя данные о котором необходимо получить
         """
         raise NotImplementedError
