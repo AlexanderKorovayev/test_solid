@@ -3,6 +3,7 @@
 """
 __author__ = 'Korovaev A.V.'
 
+import threading
 from implementation.pg_worker import PGWorker
 from implementation.transport import UserTransport
 from implementation.pg_user_worker import PGUserWorker
@@ -15,6 +16,7 @@ def get_user_by_id_db(user_id):
     :param user_id: id пользователя данные о котором необходимо получить
     """
     
+    print(f'start {threading.current_thread().name}\n')
     # результат по умолчанию
     result = {'user_id': None, 'name': None, 'surname': None, 'countries': None, 'phone_number': None}
 
@@ -30,8 +32,10 @@ def get_user_by_id_db(user_id):
     if user_data:
         # проверяем корректность данных и возвращаем
         result = user_data
+        print(f'finish {threading.current_thread().name}\n')
         return result
     else:
+        print(f'finish {threading.current_thread().name}\n')
         return result
 
 

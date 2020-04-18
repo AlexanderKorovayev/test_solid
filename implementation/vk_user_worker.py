@@ -5,6 +5,7 @@ __author__ = 'Korovaev A.V.'
 
 
 import vk
+import time
 from interfaces.i_user_worker import IUserWorker
 
 
@@ -22,5 +23,6 @@ class VKUserWorker(IUserWorker):
 
         session = vk.Session(access_token=self.token)
         api = vk.API(session, v=self.api_version)
+        time.sleep(3)
         profile_info = api.account.getProfileInfo()
         return profile_info

@@ -1,4 +1,14 @@
+import time
+from datetime import datetime, date
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from implementation import api
+
+
+def do_something():
+    print('start something')
+    time.sleep(2)
+    print('finish something')
 
 
 def get_user_by_id(user_id):
@@ -8,8 +18,33 @@ def get_user_by_id(user_id):
     """
 
     # если данные о пользователе уже есть в базе данных то получим их
+    # данный вариант с последовательным выполнением занимает
+    # spend 0:00:02.037002 если не включать слипов
+    # spend 0:00:05.039119 если включить слип на общение с базой 3 секунды
+    # spend 0:00:00.044010 время которое тратится на запрос к бд
+    '''
+    start_time = datetime.now().time()
     user_data = api.get_user_by_id_db(user_id)
+    do_something()
     print('from bd ' + str(user_data))
+    print(f'spend {datetime.combine(date.today(), datetime.now().time()) - datetime.combine(date.today(), start_time)}')
+    '''
+    # в случае с выделением отдельного потока для общения с базой
+    # spend 0:00:02.000019 если не включать слипов
+    # spend 0:00:03.038477 если включить слип на общение с базой 3 секунды
+    # spend 0:00:00.044010 время которое тратится на запрос к бд
+    start_time = datetime.now().time()
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        print(f'in {threading.current_thread().name}\n')
+        ex_obj = executor.submit(api.get_user_by_id_db, user_id)
+        print(f'in {threading.current_thread().name}\n')
+        # пока запрос к базе выполянется сделаем ещё некоторую работу
+        if not ex_obj.done():
+            do_something()
+        user_data = ex_obj.result()
+        print('from bd ' + str(user_data))
+    print(f'spend {datetime.combine(date.today(), datetime.now().time()) - datetime.combine(date.today(), start_time)}')
+    
     if user_data['user_id'] != None:
         # проверяем корректность данных и возвращаем
         return user_data

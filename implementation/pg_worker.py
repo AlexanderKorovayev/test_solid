@@ -6,6 +6,7 @@ __author__ = 'Korovaev A.V.'
 
 import psycopg2
 from psycopg2.extras import DictCursor
+import time
 
 
 class PGWorker:
@@ -31,6 +32,7 @@ class PGWorker:
         :param user_id: id пользователя данные о котором необходимо получить
         """
 
+        print('in')
         conn = psycopg2.connect(database=self.db_name,
                                 user=self.login,
                                 password=self.password,
@@ -40,6 +42,7 @@ class PGWorker:
         with conn:
             with conn.cursor(cursor_factory=DictCursor) as cur:
                 cur.execute('SELECT * FROM user_info WHERE "user_id"=%s',(user_id,))
+                time.sleep(3)
                 rez = cur.fetchone()
                 return dict(rez) if rez is not None else rez
 
