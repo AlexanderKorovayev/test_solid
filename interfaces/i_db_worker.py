@@ -7,8 +7,7 @@ __author__ = 'Korovaev A.V.'
 
 
 class IDBWorker:
-
-    def get_user_data_by_id(self):
+    async def get_user_data_by_id(self):
         """
         получить данные пользователя
         """
