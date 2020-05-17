@@ -1,15 +1,16 @@
 import asyncio
 import time
-from datetime import datetime, date
+from datetime import datetime
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 from implementation import api
 
 
-def do_something():
-    print('start something')
-    time.sleep(2)
-    print('finish something')
+async def some_work():
+    print(f'I some work at {datetime.now().time()}\n')
+    await asyncio.sleep(2)
+    print(f'I some work again at {datetime.now().time()}\n')
+    return 100
 
 
 async def get_user_by_id(user_id):
@@ -17,23 +18,15 @@ async def get_user_by_id(user_id):
     функция получения данных пользователя
     :param user_id: id пользователя данные о котором необходимо получить
     """
-
-    # если данные о пользователе уже есть в базе данных то получим их
-    # данный вариант с последовательным выполнением занимает
-    # spend 0:00:02.037002 если не включать слипов
-    # spend 0:00:05.039119 если включить слип на общение с базой 3 секунды
-    # spend 0:00:00.044010 время которое тратится на запрос к бд
+    print(f'start get DB data {datetime.now().time()}')
     user_data = await api.get_user_by_id_db(user_id)
-    print(user_data)
-    #do_something()
-    
     if user_data['user_id'] != None:
         # проверяем корректность данных и возвращаем
+        print(f'finish get DB data {datetime.now().time()}')
         return user_data
     else:
         # получаем данные из вк
         user_data = await api.get_user_by_id_vk(user_id)
-        print('from vk ' + str(user_data))
         # пишем в базу
         await api.save_user_data_pg(user_data)
         return user_data
@@ -43,7 +36,17 @@ async def main(user_id):
     """
     входная точка основного цикла событий
     """
-    res = await get_user_by_id(user_id)
+    # запустили таск на получение данных о пользователе
+    db_task = asyncio.create_task(get_user_by_id(user_id))
+    # выполним некоторую работу пока идёт запрос в бд
+    print(f'I some work at {datetime.now().time()}\n')
+    await asyncio.sleep(1.1)
+    print(f'I some work again at {datetime.now().time()}\n')
+    if not db_task.done():
+        print('not finish task')
+        await db_task
+        res = db_task.result()
+    res = db_task.result()
     return res
 
 

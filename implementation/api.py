@@ -3,7 +3,6 @@
 """
 __author__ = 'Korovaev A.V.'
 
-import multiprocessing
 from implementation.sqlite_worker import SQLiteWorker
 from implementation.transport import UserTransport
 from implementation.sqlite_user_worker import SQLiteUserWorker
@@ -17,10 +16,8 @@ async def get_user_by_id_db(user_id):
     """
     # результат по умолчанию
     result = {'user_id': None, 'name': None, 'surname': None, 'countries': None, 'phone_number': None}
-
     # создаём синглтон для работы с базами данных
     sqlite_worker = SQLiteWorker(db_name='test_solid.db')
-
     # пробуем получить данные из базы
     sqlite_user_worker = SQLiteUserWorker()
     user_transport = UserTransport(sqlite_user_worker)

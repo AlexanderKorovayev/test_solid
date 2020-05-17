@@ -6,6 +6,7 @@ __author__ = 'Korovaev A.V.'
 
 import aiosqlite
 import time
+import asyncio
 
 
 class SQLiteWorker:
@@ -27,6 +28,8 @@ class SQLiteWorker:
             async with conn.cursor() as cur:
                 await cur.execute('SELECT * FROM user_info WHERE "user_id"=?',(user_id,))
                 rez = await cur.fetchone()
+                # имитация сложного запроса к бд
+                await asyncio.sleep(1)
                 return dict(rez) if rez is not None else rez
 
     async def get_vk_connect_data(self, vk_id):
